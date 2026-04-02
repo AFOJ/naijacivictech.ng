@@ -179,6 +179,53 @@ export function SiteHeader() {
       match ? "text-paper" : "text-paper/85 hover:text-paper",
     );
 
+  /** Invisible copy of Sign in + Register; lives in fixed-width row (below) to avoid CLS */
+  const desktopAuthPlaceholder = (
+    <div
+      className='flex items-center justify-end gap-5 lg:gap-7'
+      aria-busy='true'
+      aria-label='Loading account'
+    >
+      <span
+        className={cn(
+          navLinkTopBase,
+          "pointer-events-none select-none text-transparent",
+        )}
+      >
+        Sign in
+      </span>
+      <span
+        className={cn(
+          navLinkTopBase,
+          "pointer-events-none select-none text-transparent",
+        )}
+      >
+        Register
+      </span>
+    </div>
+  );
+
+  const mobileAuthPlaceholder = (
+    <div aria-busy='true' aria-label='Loading account'>
+      <span
+        className={cn(
+          mobileMainNavClass(false),
+          "pointer-events-none select-none text-transparent",
+        )}
+      >
+        Sign in
+      </span>
+      <span
+        className={cn(
+          mobileMainNavClass(false),
+          "pointer-events-none select-none text-transparent",
+        )}
+      >
+        Register
+      </span>
+    </div>
+  );
+
   return (
     <header className='sticky top-0 z-200 bg-ink'>
       {/* Row 1: logo + actions */}
@@ -244,34 +291,34 @@ export function SiteHeader() {
               </Link>
             ) : null}
           </nav>
-          {status === "loading" ? (
-            <span className='inline-flex items-center py-2 text-[13px] text-paper/40'>
-              …
-            </span>
-          ) : session?.user ? (
-            <DesktopAccountMenu key={pathname} user={session.user} />
-          ) : (
-            <>
-              <Link
-                href='/login'
-                className={cn(
-                  navLinkTopBase,
-                  topNavActive(pathname === "/login"),
-                )}
-              >
-                Sign in
-              </Link>
-              <Link
-                href='/register'
-                className={cn(
-                  navLinkTopBase,
-                  topNavActive(pathname === "/register"),
-                )}
-              >
-                Register
-              </Link>
-            </>
-          )}
+          <div className='flex w-[11rem] shrink-0 justify-end lg:w-[12.5rem]'>
+            {status === "loading" ? (
+              desktopAuthPlaceholder
+            ) : session?.user ? (
+              <DesktopAccountMenu key={pathname} user={session.user} />
+            ) : (
+              <div className='flex items-center justify-end gap-5 lg:gap-7'>
+                <Link
+                  href='/login'
+                  className={cn(
+                    navLinkTopBase,
+                    topNavActive(pathname === "/login"),
+                  )}
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href='/register'
+                  className={cn(
+                    navLinkTopBase,
+                    topNavActive(pathname === "/register"),
+                  )}
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+          </div>
           <button
             type='button'
             className='shrink-0 cursor-pointer rounded bg-sun px-3 py-2 font-sans text-[12px] font-medium leading-none text-ink lg:px-4 lg:text-[13px]'
@@ -352,9 +399,7 @@ export function SiteHeader() {
             </Link>
           ) : null}
           {status === "loading" ? (
-            <span className='border-b border-paper/10 py-3 text-[14px] text-paper/40'>
-              …
-            </span>
+            mobileAuthPlaceholder
           ) : session?.user ? (
             <div className='border-b border-paper/10'>
               <button

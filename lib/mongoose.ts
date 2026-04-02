@@ -9,8 +9,10 @@ const globalForMongoose = globalThis as typeof globalThis & {
   mongooseCache?: MongooseCache;
 };
 
-const cache: MongooseCache =
-  globalForMongoose.mongooseCache ?? { conn: null, promise: null };
+const cache: MongooseCache = globalForMongoose.mongooseCache ?? {
+  conn: null,
+  promise: null,
+};
 if (process.env.NODE_ENV === "development") {
   globalForMongoose.mongooseCache = cache;
 }
@@ -25,7 +27,7 @@ export async function connectMongoose(): Promise<typeof mongoose> {
     );
   }
 
-  const dbName = process.env.MONGODB_DB ?? "naija_civic_tech";
+  const dbName = process.env.MONGODB_DB;
 
   if (!cache.promise) {
     cache.promise = mongoose.connect(uri, {
