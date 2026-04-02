@@ -201,7 +201,7 @@ export function DirectoryBoard({ previewMaxCards }: DirectoryBoardProps = {}) {
           </>
         )}
       </div>
-      <div className='grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-line bg-line sm:[grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]'>
+      <div className='grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))]'>
         {items.length === 0 ? (
           <div className='col-span-full px-12 py-12 text-center text-[13px] text-muted'>
             No tools found.

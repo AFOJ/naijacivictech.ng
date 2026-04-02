@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { jsonInternalError } from "@/lib/api-error-response";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit-ip";
 import {
   parseProjectObjectId,
   toggleVoteForUser,
@@ -37,6 +39,18 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
+  const ip = clientIp(request);
+  const limited = checkRateLimit(`vote:${userId}:${ip}`, 90, 60 * 1000);
+  if (!limited.allowed) {
+    return NextResponse.json(
+      { error: "Too many votes. Try again shortly." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(limited.retryAfterSec) },
+      },
+    );
+  }
+
   try {
     const result = await toggleVoteForUser(idParam, userId, delta);
     if (!result.ok) {
@@ -54,7 +68,6 @@ export async function POST(request: Request, context: RouteContext) {
       viewerHasVoted: result.viewerHasVoted,
     });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Vote failed";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return jsonInternalError(e, "POST vote");
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { jsonInternalError } from "@/lib/api-error-response";
 import { requireAdminSession } from "@/lib/require-admin";
 import {
   parseProjectObjectId,
@@ -61,8 +62,6 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
     return NextResponse.json({ project: result.project });
   } catch (e) {
-    const message =
-      e instanceof Error ? e.message : "Failed to update approval";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return jsonInternalError(e, "PATCH listing-approval");
   }
 }

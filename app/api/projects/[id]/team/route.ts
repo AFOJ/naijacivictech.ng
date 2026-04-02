@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { jsonInternalError } from "@/lib/api-error-response";
 import type { TeamRole } from "@/data/types";
 import {
   isTeamRole,
@@ -45,6 +46,12 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     const result = await pushTeamMember(idParam, { userId, role }, userId);
     if (!result.ok) {
+      if (result.reason === "not_allowed") {
+        return NextResponse.json(
+          { error: "Team sign-ups are not available yet." },
+          { status: 403 },
+        );
+      }
       if (result.reason === "duplicate") {
         return NextResponse.json(
           { error: "You are already on this team" },
@@ -55,7 +62,6 @@ export async function POST(request: Request, context: RouteContext) {
     }
     return NextResponse.json({ project: result.project });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to add member";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return jsonInternalError(e, "POST team");
   }
 }

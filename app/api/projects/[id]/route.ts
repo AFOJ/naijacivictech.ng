@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { jsonInternalError } from "@/lib/api-error-response";
 import { getProjectById, parseProjectObjectId } from "@/lib/services/server/projects";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -18,7 +19,6 @@ export async function GET(_request: Request, context: RouteContext) {
     }
     return NextResponse.json({ project });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to load project";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return jsonInternalError(e, "GET /api/projects/[id]");
   }
 }

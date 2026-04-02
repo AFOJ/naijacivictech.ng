@@ -107,18 +107,20 @@ export function HomePage() {
               </svg>
               Submit / Suggest
             </button>
-            <Link
-              href='/pipeline'
-              className={cn(btn, "bg-transparent text-ink hover:border-ink")}
-            >
-              View Pipeline →
-            </Link>
-            <Link
-              href='/directory'
-              className={cn(btn, "bg-transparent text-ink hover:border-ink")}
-            >
-              Browse Directory →
-            </Link>
+            <div className='flex flex-wrap gap-2'>
+              <Link
+                href='/pipeline'
+                className={cn(btn, "bg-transparent text-ink hover:border-ink")}
+              >
+                View Pipeline →
+              </Link>
+              <Link
+                href='/directory'
+                className={cn(btn, "bg-transparent text-ink hover:border-ink")}
+              >
+                Browse Directory →
+              </Link>
+            </div>
           </div>
         </section>
 

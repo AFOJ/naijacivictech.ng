@@ -185,6 +185,15 @@ export const PUBLIC_PROJECT_FILTER = {
   ],
 } as const;
 
+const PUBLIC_MATCH = PUBLIC_PROJECT_FILTER as unknown as Record<string, unknown>;
+
+async function isPublicProject(oid: mongoose.Types.ObjectId): Promise<boolean> {
+  const n = await ProjectModel.countDocuments({
+    $and: [{ _id: oid }, PUBLIC_MATCH],
+  }).exec();
+  return n > 0;
+}
+
 const PIPELINE_STAGES = [
   "suggested",
   "accepted",
@@ -705,16 +714,34 @@ export async function toggleVoteForUser(
 
   if (delta === 1) {
     const res = await ProjectModel.findOneAndUpdate(
-      { _id: oid, voterIds: { $nin: [userId] } },
+      {
+        $and: [
+          { _id: oid },
+          PUBLIC_MATCH,
+          { voterIds: { $nin: [userId] } },
+        ],
+      },
       { $push: { voterIds: userId }, $inc: { votes: 1 } },
       { new: true },
     )
       .lean()
       .exec();
     if (!res) {
-      const exists = await ProjectModel.findById(oid).select("_id").lean().exec();
-      if (!exists) return { ok: false, reason: "not_found" };
-      return { ok: false, reason: "already_voted" };
+      const snap = await ProjectModel.findById(oid)
+        .select("voterIds")
+        .lean()
+        .exec();
+      if (!snap) return { ok: false, reason: "not_found" };
+      if (!(await isPublicProject(oid))) return { ok: false, reason: "not_found" };
+      const voterIds = Array.isArray((snap as { voterIds?: unknown }).voterIds)
+        ? ((snap as { voterIds: unknown[] }).voterIds as unknown[]).filter(
+            (x): x is string => typeof x === "string",
+          )
+        : [];
+      if (voterIds.includes(userId)) {
+        return { ok: false, reason: "already_voted" };
+      }
+      return { ok: false, reason: "not_found" };
     }
     const votes = typeof res.votes === "number" ? res.votes : 0;
     return { ok: true, votes, viewerHasVoted: true };
@@ -722,9 +749,12 @@ export async function toggleVoteForUser(
 
   const res = await ProjectModel.findOneAndUpdate(
     {
-      _id: oid,
-      voterIds: userId,
-      votes: { $gte: 1 },
+      $and: [
+        { _id: oid },
+        PUBLIC_MATCH,
+        { voterIds: userId },
+        { votes: { $gte: 1 } },
+      ],
     },
     { $pull: { voterIds: userId }, $inc: { votes: -1 } },
     { new: true },
@@ -732,9 +762,21 @@ export async function toggleVoteForUser(
     .lean()
     .exec();
   if (!res) {
-    const exists = await ProjectModel.findById(oid).select("_id").lean().exec();
-    if (!exists) return { ok: false, reason: "not_found" };
-    return { ok: false, reason: "not_voted" };
+    const snap = await ProjectModel.findById(oid)
+      .select("voterIds")
+      .lean()
+      .exec();
+    if (!snap) return { ok: false, reason: "not_found" };
+    if (!(await isPublicProject(oid))) return { ok: false, reason: "not_found" };
+    const voterIds = Array.isArray((snap as { voterIds?: unknown }).voterIds)
+      ? ((snap as { voterIds: unknown[] }).voterIds as unknown[]).filter(
+          (x): x is string => typeof x === "string",
+        )
+      : [];
+    if (!voterIds.includes(userId)) {
+      return { ok: false, reason: "not_voted" };
+    }
+    return { ok: false, reason: "not_found" };
   }
   const votes = typeof res.votes === "number" ? res.votes : 0;
   return { ok: true, votes, viewerHasVoted: false };
@@ -742,13 +784,20 @@ export async function toggleVoteForUser(
 
 export type PushTeamMemberResult =
   | { ok: true; project: CivicProject }
-  | { ok: false; reason: "not_found" | "duplicate" };
+  | { ok: false; reason: "not_found" | "duplicate" | "not_allowed" };
+
+/** Off until owner-approved invites exist (prevents open team spam). */
+const TEAM_SELF_JOIN_ENABLED = false;
 
 export async function pushTeamMember(
   id: string,
   slot: ProjectTeamSlot,
   viewerUserId?: string | null,
 ): Promise<PushTeamMemberResult> {
+  if (!TEAM_SELF_JOIN_ENABLED) {
+    return { ok: false, reason: "not_allowed" };
+  }
+
   const oid = parseProjectObjectId(id);
   const userOid = parseProjectObjectId(slot.userId);
   if (!oid || !userOid) {

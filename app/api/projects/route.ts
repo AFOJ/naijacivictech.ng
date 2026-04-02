@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { jsonInternalError } from "@/lib/api-error-response";
 import {
   createIdeaFromBody,
   createListingFromBody,
   parseCreateIdeaBody,
   parseCreateListingBody,
 } from "@/lib/api/create-project";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit-ip";
 import {
   getProjectsStats,
   listProjectsPage,
@@ -55,12 +57,23 @@ export async function GET(request: Request) {
       { status: 400 },
     );
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to load projects";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return jsonInternalError(e, "GET /api/projects");
   }
 }
 
 export async function POST(request: Request) {
+  const ip = clientIp(request);
+  const limited = checkRateLimit(`create-project:${ip}`, 20, 60 * 60 * 1000);
+  if (!limited.allowed) {
+    return NextResponse.json(
+      { error: "Too many submissions. Try again later." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(limited.retryAfterSec) },
+      },
+    );
+  }
+
   try {
     const session = await auth();
     const userId = session?.user?.id ?? null;
@@ -99,9 +112,13 @@ export async function POST(request: Request) {
     const status =
       message.startsWith("Expected") ||
       message.includes("required") ||
-      message === "Invalid body"
+      message === "Invalid body" ||
+      message.includes("must be at most")
         ? 400
         : 500;
+    if (status === 500) {
+      return jsonInternalError(e, "POST /api/projects");
+    }
     return NextResponse.json({ error: message }, { status });
   }
 }

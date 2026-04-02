@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { jsonInternalError } from "@/lib/api-error-response";
 import { requireAdminSession } from "@/lib/require-admin";
 import { listPipelineSuggestionsModerationPage } from "@/lib/services/server/projects";
 
@@ -28,8 +29,6 @@ export async function GET(request: Request) {
     );
     return NextResponse.json(page);
   } catch (e) {
-    const message =
-      e instanceof Error ? e.message : "Failed to load suggestions";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return jsonInternalError(e, "GET admin/suggestions");
   }
 }

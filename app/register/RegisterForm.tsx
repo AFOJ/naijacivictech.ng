@@ -71,7 +71,7 @@ export function RegisterForm() {
         </h1>
         <p className="mb-8 text-[13px] text-muted">
           Use email and password or continue with Google. Passwords must be at
-          least 8 characters.
+          least 10 characters.
         </p>
 
         <form onSubmit={onSubmit} className="mb-6 space-y-4">
@@ -84,6 +84,7 @@ export function RegisterForm() {
               type="text"
               autoComplete="name"
               required
+              maxLength={120}
               className={fieldInput}
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -112,7 +113,8 @@ export function RegisterForm() {
               type="password"
               autoComplete="new-password"
               required
-              minLength={8}
+              minLength={10}
+              maxLength={72}
               className={fieldInput}
               value={password}
               onChange={(e) => setPassword(e.target.value)}

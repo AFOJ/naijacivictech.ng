@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { jsonInternalError } from "@/lib/api-error-response";
 import { requireAdminSession } from "@/lib/require-admin";
 import {
   listListingModerationPage,
@@ -45,7 +46,6 @@ export async function GET(request: Request) {
     );
     return NextResponse.json(page);
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to load listings";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return jsonInternalError(e, "GET admin/listings");
   }
 }

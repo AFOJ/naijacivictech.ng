@@ -31,6 +31,20 @@ async function uniqueSlug(base: string): Promise<string> {
 const MAX_CRITERIA = 20;
 const MAX_CRITERION_LEN = 400;
 
+const MAX_LISTING_NAME = 200;
+const MAX_TAGLINE = 400;
+const MAX_DESCRIPTION = 8000;
+const MAX_URL = 2048;
+const MAX_AUTHOR_NAME = 120;
+const MAX_IDEA_PROBLEM = 2000;
+const MAX_IDEA_SOLUTION = 8000;
+
+function assertMaxLen(field: string, value: string, max: number) {
+  if (value.length > max) {
+    throw new Error(`${field} must be at most ${max} characters`);
+  }
+}
+
 function parseCriteriaList(raw: unknown): string[] {
   if (raw == null) return [];
   if (!Array.isArray(raw)) return [];
@@ -59,9 +73,11 @@ export function parseCreateListingBody(body: unknown): CreateListingBody {
 
   const name = typeof o.name === "string" ? o.name.trim() : "";
   if (!name) throw new Error("Name is required");
+  assertMaxLen("Name", name, MAX_LISTING_NAME);
 
   const category = typeof o.category === "string" ? o.category.trim() : "";
   if (!category) throw new Error("Category is required");
+  assertMaxLen("Category", category, 80);
 
   if (!isListingStatus(o.status)) throw new Error("Invalid listing status");
 
@@ -70,10 +86,15 @@ export function parseCreateListingBody(body: unknown): CreateListingBody {
     typeof o.description === "string" ? o.description.trim() : "";
   const github = typeof o.github === "string" ? o.github.trim() : "";
   const liveUrl = typeof o.liveUrl === "string" ? o.liveUrl.trim() : "";
+  assertMaxLen("Tagline", tagline, MAX_TAGLINE);
+  assertMaxLen("Description", description, MAX_DESCRIPTION);
+  assertMaxLen("GitHub URL", github, MAX_URL);
+  assertMaxLen("Live URL", liveUrl, MAX_URL);
   const authorName =
     typeof o.authorName === "string" ? o.authorName.trim() : undefined;
   const authorEmail =
     typeof o.authorEmail === "string" ? o.authorEmail.trim() : undefined;
+  if (authorName) assertMaxLen("Author name", authorName, MAX_AUTHOR_NAME);
 
   return {
     kind: "listing",
@@ -98,17 +119,21 @@ export function parseCreateIdeaBody(body: unknown): CreateIdeaBody {
 
   const problem = typeof o.problem === "string" ? o.problem.trim() : "";
   if (!problem) throw new Error("Problem is required");
+  assertMaxLen("Problem", problem, MAX_IDEA_PROBLEM);
 
   const solution = typeof o.solution === "string" ? o.solution.trim() : "";
   if (!solution) throw new Error("Solution is required");
+  assertMaxLen("Solution", solution, MAX_IDEA_SOLUTION);
 
   const category = typeof o.category === "string" ? o.category.trim() : "";
   if (!category) throw new Error("Category is required");
+  assertMaxLen("Category", category, 80);
 
   const authorName =
     typeof o.authorName === "string" ? o.authorName.trim() : undefined;
   const authorEmail =
     typeof o.authorEmail === "string" ? o.authorEmail.trim() : undefined;
+  if (authorName) assertMaxLen("Author name", authorName, MAX_AUTHOR_NAME);
 
   const criteria = parseCriteriaList(o.criteria);
 
