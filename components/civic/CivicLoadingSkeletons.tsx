@@ -18,27 +18,37 @@ function PipelineColumnSkeleton({
   cards: number;
   fillViewport?: boolean;
 }) {
+  const badgeTw = cn(
+    "shrink-0 animate-pulse rounded-full px-2 py-0.5",
+    countTint,
+    countClassWidth,
+  );
   return (
     <div
       className={cn(
         "flex flex-col rounded-lg bg-paper2 p-4",
-        !fillViewport && "h-full min-h-0",
+        !fillViewport && "max-lg:h-full max-lg:min-h-0 lg:h-full lg:min-h-0",
         fillViewport &&
-          "min-h-0 flex-1 lg:h-full lg:max-h-none lg:overflow-hidden",
+          "min-h-0 max-lg:min-h-0 max-lg:flex-1 lg:h-full lg:max-h-none lg:overflow-hidden",
       )}
     >
-      <div className='mb-4 flex shrink-0 items-center justify-between'>
+      <div className='mb-4 hidden shrink-0 items-center justify-between gap-2 lg:flex'>
         <span className='font-display text-[13px] font-bold tracking-tight'>
           {label}
         </span>
-        <span
-          className={cn(
-            "animate-pulse rounded-full px-2 py-0.5",
-            countTint,
-            countClassWidth,
-          )}
-          aria-hidden
-        />
+        <span className={badgeTw} aria-hidden />
+      </div>
+      <div
+        className='mb-4 flex min-h-11 w-full shrink-0 items-center justify-between gap-2 rounded-md py-1 lg:hidden'
+        aria-hidden
+      >
+        <span className='font-display text-[13px] font-bold tracking-tight'>
+          {label}
+        </span>
+        <span className='flex shrink-0 items-center gap-2'>
+          <span className={badgeTw} aria-hidden />
+          <span className='text-[10px] text-muted tabular-nums'>▼</span>
+        </span>
       </div>
       <div
         className={cn(
@@ -74,9 +84,11 @@ function PipelineColumnSkeleton({
 export function PipelineBoardSkeleton({
   maxCardsPerColumn,
   fillViewport,
+  hideSort = false,
 }: {
   maxCardsPerColumn?: number;
   fillViewport?: boolean;
+  hideSort?: boolean;
 }) {
   const cardsPerCol =
     typeof maxCardsPerColumn === "number" && maxCardsPerColumn >= 0
@@ -102,11 +114,23 @@ export function PipelineBoardSkeleton({
     <div
       className={cn(
         "w-full min-h-0",
-        fillViewport && "flex h-full max-h-[70dvh] min-h-0 flex-1 flex-col",
+        fillViewport &&
+          "flex h-full max-h-[90dvh] min-h-0 flex-1 flex-col lg:max-h-[70dvh]",
       )}
       aria-busy='true'
       aria-label='Loading pipeline'
     >
+      {fillViewport && !hideSort ? (
+        <div className='mb-3 flex flex-wrap items-center justify-end gap-2'>
+          <div className={cn("h-3 w-[7.5rem] rounded", pulse)} />
+          <div
+            className={cn(
+              "h-[34px] min-w-[140px] rounded-md border border-line bg-paper/80",
+              pulse,
+            )}
+          />
+        </div>
+      ) : null}
       <div className={gridClass}>
         {STAGE_LABELS.map((label, idx) => (
           <PipelineColumnSkeleton

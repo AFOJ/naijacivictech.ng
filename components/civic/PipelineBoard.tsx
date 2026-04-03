@@ -204,6 +204,7 @@ export function PipelineBoard({
       <PipelineBoardSkeleton
         maxCardsPerColumn={maxCardsPerColumn}
         fillViewport={fillViewport}
+        hideSort={hideSort}
       />
     );
   }
