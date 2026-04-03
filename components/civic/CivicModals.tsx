@@ -83,6 +83,7 @@ type ListingFormValues = {
 type IdeaCriteriaRow = { text: string };
 
 type IdeaFormValues = {
+  title: string;
   problem: string;
   solution: string;
   category: string;
@@ -131,6 +132,7 @@ export function CivicModals() {
 
   const ideaForm = useForm<IdeaFormValues>({
     defaultValues: {
+      title: "",
       problem: "",
       solution: "",
       category: "",
@@ -570,6 +572,7 @@ export function CivicModals() {
                       .map((row) => row.text.trim())
                       .filter(Boolean);
                     await ideaM.mutateAsync({
+                      title: data.title.trim(),
                       problem: data.problem.trim(),
                       solution: data.solution.trim(),
                       category: data.category.trim(),
@@ -603,10 +606,36 @@ export function CivicModals() {
                   Drop your idea
                 </h2>
                 <p className='mb-6 text-[13px] font-light leading-relaxed text-muted'>
-                  No code needed. Describe the problem and what a digital
-                  solution could look like. Top-voted ideas get picked up by the
-                  community to build.
+                  No code needed. Add a short title for the card, then describe
+                  the problem and what a digital solution could look like.
                 </p>
+                <div className='mb-4'>
+                  <label className={fieldLabel} htmlFor='i-title'>
+                    Short title
+                  </label>
+                  <input
+                    id='i-title'
+                    type='text'
+                    className={fieldInput}
+                    maxLength={90}
+                    placeholder='e.g. Public accountability for reps'
+                    {...ideaForm.register("title", {
+                      required: "Add a short title",
+                      maxLength: {
+                        value: 90,
+                        message: "Title must be 90 characters or less",
+                      },
+                    })}
+                  />
+                  <p className='mt-1 text-[11px] text-muted'>
+                    Shown on pipeline cards — keep it concise.
+                  </p>
+                  {ideaForm.formState.errors.title ? (
+                    <p className={fieldError} role='alert'>
+                      {ideaForm.formState.errors.title.message}
+                    </p>
+                  ) : null}
+                </div>
                 <div className='mb-4'>
                   <label className={fieldLabel} htmlFor='i-problem'>
                     What&apos;s the problem?
@@ -896,16 +925,35 @@ export function CivicModals() {
                 <div className='flex size-[52px] shrink-0 items-center justify-center rounded-[10px] border border-line bg-paper text-2xl'>
                   {projectModalProject.icon}
                 </div>
-                <div>
+                <div className='min-w-0 flex-1'>
                   <h3
                     id='project-detail-title'
                     className='mb-1 font-display text-lg font-bold'
                   >
                     {projectModalProject.name}
                   </h3>
-                  <p className='mb-2 text-[10px] font-medium uppercase tracking-wider text-muted'>
-                    Posted {formatPostedAt(projectModalProject.postedAt)}
-                  </p>
+                  <div className='mb-2 flex w-full items-center justify-between gap-3 text-[10px]'>
+                    <span className='shrink-0 font-medium uppercase tracking-wider text-muted'>
+                      Posted {formatPostedAt(projectModalProject.postedAt)}
+                    </span>
+                    <div className='flex min-w-0 max-w-[55%] items-center justify-end gap-2 sm:max-w-[60%]'>
+                      <div
+                        className='flex size-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white'
+                        style={{
+                          background: projectModalProject.authorColor,
+                        }}
+                        aria-hidden
+                      >
+                        {initials(projectModalProject.authorName)}
+                      </div>
+                      <span
+                        className='min-w-0 truncate text-right font-medium text-ink/80'
+                        title={projectModalProject.authorName}
+                      >
+                        {projectModalProject.authorName}
+                      </span>
+                    </div>
+                  </div>
                   {projectModalProject.request?.trim() ? (
                     <div className='mb-4 rounded-lg border border-line bg-paper px-4 py-3'>
                       <h4 className='mb-1.5 text-[11px] font-semibold uppercase tracking-[0.09em] text-muted'>

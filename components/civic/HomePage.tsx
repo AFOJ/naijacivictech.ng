@@ -68,14 +68,14 @@ export function HomePage() {
                 Live Tools
               </div>
             </div>
-            <div>
+            {/* <div>
               <div className='font-display text-[30px] font-bold leading-none'>
-                60+
+                10+
               </div>
               <div className='mt-1 text-[10px] uppercase tracking-widest text-muted'>
                 Contributors
               </div>
-            </div>
+            </div> */}
             <div>
               <div className='font-display text-[30px] font-bold leading-none'>
                 {projectsLoading ? "…" : (stats?.openSuggestions ?? "…")}

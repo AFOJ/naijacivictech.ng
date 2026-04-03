@@ -7,8 +7,8 @@ import {
   usePipelineProjectsInfinite,
 } from "@/hooks/use-civic-feeds";
 import { useCivicVote } from "@/hooks/use-civic-vote";
-import { formatPostedAt } from "@/lib/civic-utils";
 import { civicModalStore } from "@/lib/civic-modal-store";
+import { formatPostedAt, initials } from "@/lib/civic-utils";
 import { cn } from "@/lib/cn";
 import { useId, useMemo, useState } from "react";
 
@@ -67,7 +67,7 @@ function PipelineCard({
   const openDetail = () => civicModalStore.openProject(p.id);
 
   return (
-    <div className='flex w-full shrink-0 gap-2 rounded-md border border-line bg-card p-3.5 text-left font-[inherit] text-inherit transition-all'>
+    <div className='flex flex-col w-full shrink-0 gap-2 rounded-md border border-line bg-card p-3.5 text-left font-[inherit] text-inherit transition-all'>
       <button
         type='button'
         className='min-w-0 flex-1 cursor-pointer border-none bg-transparent p-0 text-left font-[inherit] text-inherit outline-none focus-visible:ring-2 focus-visible:ring-sun focus-visible:ring-offset-2 focus-visible:ring-offset-card'
@@ -78,50 +78,57 @@ function PipelineCard({
           <div className='text-lg leading-none'>{p.icon}</div>
           {p.verified ? <span className={verifiedTw}>✓ Verified</span> : null}
         </div>
-        <div className='mb-1 font-display text-[13px] font-bold tracking-tight'>
+        <div className='mb-1 line-clamp-4 font-display text-[13px] font-bold tracking-tight'>
           {p.name}
         </div>
-        <div className='mb-1.5 text-[10px] text-muted'>
-          Posted {formatPostedAt(p.postedAt)}
+        <div className='mb-1.5 text-[10px]'>
+          <span className='shrink-0 text-muted'>
+            Posted {formatPostedAt(p.postedAt)}
+          </span>
         </div>
         {p.request?.trim() ? (
-          <div className='mb-1.5 rounded border border-line/70 bg-paper/60 px-2 py-1.5'>
+          <div className='mb-2 rounded border border-line/70 bg-paper/60 px-2 py-1.5'>
             <div className='text-[9px] font-semibold uppercase tracking-wider text-muted'>
               Request
             </div>
-            <p className='line-clamp-2 text-[11px] leading-snug text-ink'>
+            <p className='line-clamp-5 text-[11px] leading-snug text-ink'>
               {p.request.trim()}
             </p>
           </div>
         ) : null}
-        <div className='text-[11px] font-light leading-snug text-muted'>
-          {p.request?.trim() ? (
-            <>
-              <span className='font-medium text-ink/80'>Approach · </span>
-              {p.description}
-            </>
-          ) : (
-            p.description
-          )}
-        </div>
-        <div className='mt-2 border-t border-line pt-2'>
-          <span className='rounded-full border border-line bg-paper px-[7px] py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted'>
-            {p.category}
+
+        <div className='flex min-w-0 items-center gap-1.5'>
+          <div
+            className='flex size-[18px] shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-white'
+            style={{ background: p.authorColor }}
+            aria-hidden
+          >
+            {initials(p.authorName)}
+          </div>
+          <span
+            className='min-w-0 truncate text-[10px] font-medium text-ink/80'
+            title={p.authorName}
+          >
+            {p.authorName}
           </span>
         </div>
       </button>
-      <div className='flex shrink-0 flex-col justify-end'>
+
+      <div className='mt-1 flex w-full items-center justify-between gap-2 border-t border-line pt-2'>
+        <span className='inline-flex shrink-0 items-center rounded-full border border-line bg-paper px-[7px] py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted'>
+          {p.category}
+        </span>
         <button
           type='button'
           disabled={!canVote}
           title={canVote ? undefined : "Sign in to vote"}
           className={cn(
-            "rounded border border-line bg-transparent px-[7px] py-0.5 font-sans text-[11px] font-semibold text-muted transition-colors",
+            "shrink-0 rounded border border-line bg-transparent px-[7px] py-0.5 font-sans text-[11px] font-semibold text-muted transition-colors",
             canVote && "hover:border-flame hover:text-flame",
             !canVote && "cursor-not-allowed opacity-60",
             voted &&
               canVote &&
-              "border-flame bg-flame text-white hover:bg-flame",
+              "border-flame bg-flame text-white hover:bg-flame/90 hover:text-white",
           )}
           onClick={() => {
             if (canVote) onVote();
@@ -137,9 +144,7 @@ function PipelineCard({
 const sortSelectTw =
   "min-w-[140px] cursor-pointer rounded-md border-[1.5px] border-line bg-paper px-2.5 py-1.5 font-sans text-xs text-ink outline-none transition-colors focus:border-brand";
 
-export type PipelineStageCounts = Partial<
-  Record<PipelineStage, number>
-> | null;
+export type PipelineStageCounts = Partial<Record<PipelineStage, number>> | null;
 
 type PipelineBoardProps = {
   maxCardsPerColumn?: number;
@@ -156,9 +161,7 @@ export function PipelineBoard({
 }: PipelineBoardProps = {}) {
   const [sortMode, setSortMode] = useState<PipelineSortMode>("latest");
   const isEmbeddedHome =
-    typeof maxCardsPerColumn === "number" &&
-    maxCardsPerColumn >= 0 &&
-    hideSort;
+    typeof maxCardsPerColumn === "number" && maxCardsPerColumn >= 0 && hideSort;
 
   const previewQ = useHomePipelinePreview(isEmbeddedHome);
   const infiniteQ = usePipelineProjectsInfinite(sortMode, !isEmbeddedHome);
@@ -230,9 +233,7 @@ export function PipelineBoard({
             id={sortControlId}
             className={sortSelectTw}
             value={sortMode}
-            onChange={(e) =>
-              setSortMode(e.target.value as PipelineSortMode)
-            }
+            onChange={(e) => setSortMode(e.target.value as PipelineSortMode)}
             aria-label='Sort pipeline columns'
           >
             <option value='latest'>Latest first</option>
@@ -252,8 +253,7 @@ export function PipelineBoard({
               ? maxCardsPerColumn
               : null;
           const items = cap != null ? sorted.slice(0, cap) : sorted;
-          const badgeCount =
-            stageCountsProp?.[stage.key] ?? columnItems.length;
+          const badgeCount = stageCountsProp?.[stage.key] ?? columnItems.length;
           return (
             <div
               key={stage.key}

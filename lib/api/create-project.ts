@@ -36,6 +36,7 @@ const MAX_TAGLINE = 400;
 const MAX_DESCRIPTION = 8000;
 const MAX_URL = 2048;
 const MAX_AUTHOR_NAME = 120;
+const MAX_IDEA_TITLE = 90;
 const MAX_IDEA_PROBLEM = 2000;
 const MAX_IDEA_SOLUTION = 8000;
 
@@ -117,6 +118,10 @@ export function parseCreateIdeaBody(body: unknown): CreateIdeaBody {
   const o = body as Record<string, unknown>;
   if (o.kind !== "idea") throw new Error("Expected kind idea");
 
+  const title = typeof o.title === "string" ? o.title.trim() : "";
+  if (!title) throw new Error("Title is required");
+  assertMaxLen("Title", title, MAX_IDEA_TITLE);
+
   const problem = typeof o.problem === "string" ? o.problem.trim() : "";
   if (!problem) throw new Error("Problem is required");
   assertMaxLen("Problem", problem, MAX_IDEA_PROBLEM);
@@ -139,6 +144,7 @@ export function parseCreateIdeaBody(body: unknown): CreateIdeaBody {
 
   return {
     kind: "idea",
+    title,
     problem,
     solution,
     category,
@@ -253,9 +259,7 @@ export async function createIdeaFromBody(
     authorEmail = normalizeEmail(authorEmailRaw);
   }
 
-  const title =
-    body.problem.length > 40 ? `${body.problem.slice(0, 40)}…` : body.problem;
-  const slugBase = title
+  const slugBase = body.title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
@@ -267,7 +271,7 @@ export async function createIdeaFromBody(
   const project = {
     slug,
     icon: ICON_POOL[Math.floor(Math.random() * ICON_POOL.length)]!,
-    name: title,
+    name: body.title,
     description: body.solution,
     request: body.problem,
     category: body.category,

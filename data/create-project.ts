@@ -21,6 +21,8 @@ export type CreateListingBody = {
 
 export type CreateIdeaBody = {
   kind: "idea";
+  /** Short headline for pipeline cards (stored as project `name`) */
+  title: string;
   problem: string;
   solution: string;
   category: string;

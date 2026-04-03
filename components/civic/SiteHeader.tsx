@@ -273,7 +273,10 @@ export function SiteHeader() {
             </Link>
             <Link
               href='/about'
-              className={cn(navLinkTopBase, topNavActive(pathname === "/about"))}
+              className={cn(
+                navLinkTopBase,
+                topNavActive(pathname === "/about"),
+              )}
               onClick={closeMenu}
             >
               About
@@ -291,6 +294,7 @@ export function SiteHeader() {
               </Link>
             ) : null}
           </nav>
+          {/* Keep arbitrary widths (not w-44 / lg:w-*) so SSR and client emit identical class strings — avoids hydration mismatch in dev */}
           <div className='flex w-[11rem] shrink-0 justify-end lg:w-[12.5rem]'>
             {status === "loading" ? (
               desktopAuthPlaceholder
