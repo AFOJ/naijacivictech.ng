@@ -894,7 +894,7 @@ export function CivicModals() {
                 </div>
               ) : projectModalProject ? (
                 <>
-                  <div className='mb-6 flex gap-4 border-b border-line pb-6'>
+                  <div className='mb-6 flex flex-col md:flex-row gap-4 border-b border-line pb-6'>
                     <div className='flex size-[52px] shrink-0 items-center justify-center rounded-[10px] border border-line bg-paper text-2xl'>
                       {projectModalProject.icon}
                     </div>
