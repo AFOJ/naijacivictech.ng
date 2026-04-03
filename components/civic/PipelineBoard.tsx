@@ -8,7 +8,6 @@ import {
   usePipelineProjectsInfinite,
 } from "@/hooks/use-civic-feeds";
 import { useCivicVote } from "@/hooks/use-civic-vote";
-import { useMinWidthLg } from "@/hooks/use-min-width-lg";
 import { civicModalStore } from "@/lib/civic-modal-store";
 import { formatPostedAt } from "@/lib/civic-utils";
 import { cn } from "@/lib/cn";
@@ -197,7 +196,6 @@ export function PipelineBoard({
   const { canVote, toggleVote } = useCivicVote();
   const sortControlId = useId();
   const columnPanelId = useId();
-  const isLg = useMinWidthLg();
   const [mobileColumnOpen, setMobileColumnOpen] =
     useState<Record<PipelineStage, boolean>>(MOBILE_OPEN_DEFAULT);
 
@@ -265,7 +263,7 @@ export function PipelineBoard({
               : null;
           const items = cap != null ? sorted.slice(0, cap) : sorted;
           const badgeCount = stageCountsProp?.[stage.key] ?? columnItems.length;
-          const expanded = isLg || mobileColumnOpen[stage.key];
+          const openMobile = mobileColumnOpen[stage.key];
           const panelId = `${columnPanelId}-${stage.key}`;
           const countBadge = (
             <span
@@ -282,63 +280,62 @@ export function PipelineBoard({
               key={stage.key}
               className={cn(
                 "flex flex-col rounded-lg bg-paper2 p-4",
-                !fillViewport && (expanded ? "h-full min-h-0" : "shrink-0"),
+                !fillViewport &&
+                  cn(
+                    "lg:h-full lg:min-h-0",
+                    openMobile
+                      ? "max-lg:h-full max-lg:min-h-0"
+                      : "max-lg:shrink-0",
+                  ),
                 fillViewport &&
-                  isLg &&
-                  "min-h-0 lg:h-full lg:max-h-none lg:overflow-hidden",
+                  "min-h-0 shrink-0 lg:h-full lg:max-h-none lg:overflow-hidden",
                 fillViewport &&
-                  !isLg &&
-                  expanded &&
-                  "min-h-0 max-h-[min(64dvh,92dvh)] shrink-0 sm:max-h-[min(70dvh,94dvh)]",
-                fillViewport && !isLg && !expanded && "shrink-0",
+                  openMobile &&
+                  "max-lg:max-h-[min(64dvh,92dvh)] sm:max-lg:max-h-[min(70dvh,94dvh)]",
               )}
             >
-              {isLg ? (
-                <div className='mb-4 flex shrink-0 items-center justify-between gap-2'>
-                  <span className='font-display text-[13px] font-bold tracking-tight'>
-                    {stage.label}
-                  </span>
+              <div className='mb-4 hidden shrink-0 items-center justify-between gap-2 lg:flex'>
+                <span className='font-display text-[13px] font-bold tracking-tight'>
+                  {stage.label}
+                </span>
+                {countBadge}
+              </div>
+              <button
+                type='button'
+                className='mb-4 flex min-h-11 w-full shrink-0 items-center justify-between gap-2 rounded-md py-1 text-left outline-none transition-colors hover:bg-paper/40 focus-visible:ring-2 focus-visible:ring-sun focus-visible:ring-offset-2 focus-visible:ring-offset-paper2 lg:hidden'
+                aria-expanded={openMobile}
+                aria-controls={panelId}
+                aria-label={
+                  openMobile
+                    ? `Collapse ${stage.label} column`
+                    : `Expand ${stage.label} column`
+                }
+                onClick={() =>
+                  setMobileColumnOpen((prev) => ({
+                    ...prev,
+                    [stage.key]: !prev[stage.key],
+                  }))
+                }
+              >
+                <span className='font-display text-[13px] font-bold tracking-tight'>
+                  {stage.label}
+                </span>
+                <span className='flex shrink-0 items-center gap-2'>
                   {countBadge}
-                </div>
-              ) : (
-                <button
-                  type='button'
-                  className='mb-4 flex min-h-11 w-full shrink-0 items-center justify-between gap-2 rounded-md py-1 text-left outline-none transition-colors hover:bg-paper/40 focus-visible:ring-2 focus-visible:ring-sun focus-visible:ring-offset-2 focus-visible:ring-offset-paper2'
-                  aria-expanded={expanded}
-                  aria-controls={panelId}
-                  aria-label={
-                    expanded
-                      ? `Collapse ${stage.label} column`
-                      : `Expand ${stage.label} column`
-                  }
-                  onClick={() =>
-                    setMobileColumnOpen((prev) => ({
-                      ...prev,
-                      [stage.key]: !prev[stage.key],
-                    }))
-                  }
-                >
-                  <span className='font-display text-[13px] font-bold tracking-tight'>
-                    {stage.label}
+                  <span
+                    className='text-[10px] text-muted tabular-nums'
+                    aria-hidden
+                  >
+                    {openMobile ? "▼" : "▶"}
                   </span>
-                  <span className='flex shrink-0 items-center gap-2'>
-                    {countBadge}
-                    <span
-                      className='text-[10px] text-muted tabular-nums'
-                      aria-hidden
-                    >
-                      {expanded ? "▼" : "▶"}
-                    </span>
-                  </span>
-                </button>
-              )}
+                </span>
+              </button>
               <div
                 id={panelId}
                 className={cn(
-                  "flex min-h-0 flex-col gap-2",
-                  expanded ? "flex-1" : "hidden",
+                  "flex min-h-0 flex-1 flex-col gap-2",
+                  !openMobile && "max-lg:hidden",
                   fillViewport &&
-                    expanded &&
                     "scrollbar-none overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]",
                 )}
               >
