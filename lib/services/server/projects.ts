@@ -5,6 +5,7 @@ import type {
   TeamRole,
 } from "@/data/types";
 import { COLOR_POOL } from "@/data/projects";
+import { avatarColorFromSeed } from "@/lib/civic-utils";
 import { connectMongoose } from "@/lib/mongoose";
 import { ProjectModel, UserModel } from "@/lib/models";
 import mongoose from "mongoose";
@@ -31,6 +32,11 @@ export function parseProjectObjectId(
   return oid;
 }
 
+function ownerUserIdFromDoc(doc: Record<string, unknown>): string | null {
+  const u = doc.user;
+  return typeof u === "string" && u.trim() ? u.trim() : null;
+}
+
 function parseTeamSlots(raw: unknown): ProjectTeamSlot[] {
   if (!Array.isArray(raw)) return [];
   const out: ProjectTeamSlot[] = [];
@@ -42,6 +48,16 @@ function parseTeamSlots(raw: unknown): ProjectTeamSlot[] {
     }
   }
   return out;
+}
+
+function userIdsForProjectDocs(docs: Record<string, unknown>[]): string[] {
+  const ids = new Set<string>();
+  for (const d of docs) {
+    for (const s of parseTeamSlots(d.teams)) ids.add(s.userId);
+    const o = ownerUserIdFromDoc(d);
+    if (o) ids.add(o);
+  }
+  return [...ids];
 }
 
 function avatarColorForUserId(userId: string): string {
@@ -135,6 +151,16 @@ async function docToProject(
   } else {
     id = String(raw ?? "");
   }
+  const ownerId = ownerUserIdFromDoc(doc);
+  const authorEmailForSeed =
+    typeof doc.authorEmail === "string" && doc.authorEmail.trim()
+      ? doc.authorEmail.trim().toLowerCase()
+      : null;
+  const storedAuthorImage =
+    typeof doc.authorImage === "string" && doc.authorImage.trim()
+      ? doc.authorImage.trim()
+      : null;
+
   const { _id: _drop, authorEmail: _email, author: legacyAuthor, ...rest } =
     doc;
   void _drop;
@@ -156,15 +182,31 @@ async function docToProject(
     ? rawVoterIds.filter((x): x is string => typeof x === "string")
     : [];
   const slots = parseTeamSlots(_teamsRaw);
-  const byId =
-    userMap ?? (await fetchUserMap(slots.map((s) => s.userId)));
+  const idsForMap = [...new Set([...slots.map((s) => s.userId), ...(ownerId ? [ownerId] : [])])];
+  const byId = userMap ?? (await fetchUserMap(idsForMap));
   const teams = slotsToTeamMembers(slots, byId);
   const viewerHasVoted =
     viewerUserId != null && voterIds.includes(viewerUserId);
+
+  const colorSeed =
+    ownerId ?? authorEmailForSeed ?? (authorName.trim() || "anon");
+  const authorColor = avatarColorFromSeed(colorSeed);
+
+  const ownerBrief = ownerId ? byId.get(ownerId) : undefined;
+  const imageFromUser =
+    ownerBrief?.image &&
+    typeof ownerBrief.image === "string" &&
+    ownerBrief.image.trim()
+      ? ownerBrief.image.trim()
+      : null;
+  const authorImage = imageFromUser ?? storedAuthorImage ?? null;
+
   return {
     ...withoutNameTeamsVoters,
     id,
     authorName,
+    authorColor,
+    authorImage,
     postedAt,
     teams,
     ...(viewerUserId != null ? { viewerHasVoted } : {}),
@@ -444,10 +486,9 @@ export async function listProjectsPage(
 
   const total = await totalPromise;
 
-  const allSlots = pageDocs.flatMap((d) =>
-    parseTeamSlots((d as Record<string, unknown>).teams),
+  const userMap = await fetchUserMap(
+    userIdsForProjectDocs(pageDocs as Record<string, unknown>[]),
   );
-  const userMap = await fetchUserMap(allSlots.map((s) => s.userId));
   const projects = await Promise.all(
     pageDocs.map((d) =>
       docToProject(d as Record<string, unknown>, userMap, viewerUserId ?? null),
@@ -527,10 +568,9 @@ export async function listListingModerationPage(
   const hasMore = docs.length > limit;
   const total = await totalPromise;
 
-  const allSlots = pageDocs.flatMap((d) =>
-    parseTeamSlots((d as Record<string, unknown>).teams),
+  const userMap = await fetchUserMap(
+    userIdsForProjectDocs(pageDocs as Record<string, unknown>[]),
   );
-  const userMap = await fetchUserMap(allSlots.map((s) => s.userId));
   const projects = await Promise.all(
     pageDocs.map((d) =>
       docToProject(d as Record<string, unknown>, userMap, viewerUserId ?? null),
@@ -590,10 +630,9 @@ export async function listPipelineSuggestionsModerationPage(
   const hasMore = docs.length > limit;
   const total = await totalPromise;
 
-  const allSlots = pageDocs.flatMap((d) =>
-    parseTeamSlots((d as Record<string, unknown>).teams),
+  const userMap = await fetchUserMap(
+    userIdsForProjectDocs(pageDocs as Record<string, unknown>[]),
   );
-  const userMap = await fetchUserMap(allSlots.map((s) => s.userId));
   const projects = await Promise.all(
     pageDocs.map((d) =>
       docToProject(d as Record<string, unknown>, userMap, viewerUserId ?? null),

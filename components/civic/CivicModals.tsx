@@ -1,5 +1,6 @@
 "use client";
 
+import { AuthorAvatar } from "@/components/civic/AuthorAvatar";
 import type { CivicProject, ListingStatus, TeamRole } from "@/data/types";
 import {
   useJoinTeamMutation,
@@ -937,15 +938,12 @@ export function CivicModals() {
                       Posted {formatPostedAt(projectModalProject.postedAt)}
                     </span>
                     <div className='flex min-w-0 max-w-[55%] items-center justify-end gap-2 sm:max-w-[60%]'>
-                      <div
-                        className='flex size-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white'
-                        style={{
-                          background: projectModalProject.authorColor,
-                        }}
-                        aria-hidden
-                      >
-                        {initials(projectModalProject.authorName)}
-                      </div>
+                      <AuthorAvatar
+                        name={projectModalProject.authorName}
+                        color={projectModalProject.authorColor}
+                        image={projectModalProject.authorImage}
+                        size='md'
+                      />
                       <span
                         className='min-w-0 truncate text-right font-medium text-ink/80'
                         title={projectModalProject.authorName}

@@ -12,7 +12,7 @@ const btnSm = "px-3.5 py-1.5 text-xs";
 export default function DirectoryPage() {
   return (
     <div className='flex min-h-0 flex-1 flex-col'>
-      <section className='flex w-full mx-auto max-w-[1100px] flex-col px-10 pb-20 pt-12 max-md:px-5'>
+      <section className='flex w-full mx-auto max-w-[1200px] flex-col px-10 pb-20 pt-12 max-md:px-5'>
         <div className='mb-6 flex flex-wrap items-baseline justify-between gap-2'>
           <div>
             <h2 className='font-display text-[22px] font-extrabold tracking-tight'>

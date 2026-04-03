@@ -36,6 +36,8 @@ export type CivicProject = {
   viewerHasVoted?: boolean;
   authorName: string;
   authorColor: string;
+  /** Profile photo when submitter is a linked user (or stored snapshot). */
+  authorImage?: string | null;
   user?: string | null;
   teams: TeamMember[];
   verified?: boolean;

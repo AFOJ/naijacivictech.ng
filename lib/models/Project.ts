@@ -34,6 +34,7 @@ const projectSchema = new Schema(
     authorEmail: { type: String, default: null, lowercase: true, trim: true },
     authorName: { type: String, required: true },
     authorColor: { type: String, required: true },
+    authorImage: { type: String, default: null },
     teams: { type: [projectTeamSlotSchema], default: [] },
     verified: { type: Boolean },
     github: { type: String, default: null },

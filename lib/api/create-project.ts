@@ -5,8 +5,10 @@ import type {
 } from "@/data/create-project";
 import type { CivicProject, ListingStatus } from "@/data/types";
 import { pickRandomIconForCategory } from "@/data/project-icons";
-import { COLOR_POOL } from "@/data/projects";
+import { avatarColorFromSeed } from "@/lib/civic-utils";
 import { isValidEmail, normalizeEmail } from "@/lib/email";
+import { connectMongoose } from "@/lib/mongoose";
+import { UserModel } from "@/lib/models";
 import { GITHUB_ORG_URL } from "@/lib/site-urls";
 import { insertProject, slugExists } from "@/lib/services/server/projects";
 
@@ -16,6 +18,28 @@ const LISTING_STATUSES: ListingStatus[] = ["Idea", "Prototype", "Live"];
 
 function isListingStatus(v: unknown): v is ListingStatus {
   return typeof v === "string" && LISTING_STATUSES.includes(v as ListingStatus);
+}
+
+async function authorDisplayForCreate(
+  userId: string | null,
+  authorEmail: string | null,
+  authorName: string,
+): Promise<{ authorColor: string; authorImage: string | null }> {
+  const seed =
+    userId ??
+    (authorEmail ? normalizeEmail(authorEmail) : null) ??
+    (authorName.trim() || "anon");
+  const authorColor = avatarColorFromSeed(seed);
+  let authorImage: string | null = null;
+  if (userId) {
+    await connectMongoose();
+    const u = await UserModel.findById(userId).select("image").lean().exec();
+    if (u && typeof (u as { image?: unknown }).image === "string") {
+      const t = (u as { image: string }).image.trim();
+      if (t) authorImage = t;
+    }
+  }
+  return { authorColor, authorImage };
 }
 
 async function uniqueSlug(base: string): Promise<string> {
@@ -204,6 +228,12 @@ export async function createListingFromBody(
   const authorVotes = authCtx.userId ? 1 : 0;
   const voterIds = authCtx.userId ? [authCtx.userId] : [];
 
+  const { authorColor, authorImage } = await authorDisplayForCreate(
+    user,
+    authorEmail,
+    authorName,
+  );
+
   const project = {
     slug,
     icon: pickRandomIconForCategory(body.category),
@@ -215,7 +245,8 @@ export async function createListingFromBody(
     user,
     authorEmail,
     authorName,
-    authorColor: COLOR_POOL[Math.floor(Math.random() * COLOR_POOL.length)]!,
+    authorColor,
+    authorImage,
     teams: [],
     verified: false,
     github: github || GITHUB_ORG_URL,
@@ -269,6 +300,12 @@ export async function createIdeaFromBody(
   const authorVotes = authCtx.userId ? 1 : 0;
   const voterIds = authCtx.userId ? [authCtx.userId] : [];
 
+  const { authorColor, authorImage } = await authorDisplayForCreate(
+    user,
+    authorEmail,
+    authorName,
+  );
+
   const project = {
     slug,
     icon: pickRandomIconForCategory(body.category),
@@ -281,7 +318,8 @@ export async function createIdeaFromBody(
     user,
     authorEmail,
     authorName,
-    authorColor: COLOR_POOL[Math.floor(Math.random() * COLOR_POOL.length)]!,
+    authorColor,
+    authorImage,
     teams: [],
     verified: false,
     github: null,

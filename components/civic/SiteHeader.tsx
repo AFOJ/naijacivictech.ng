@@ -111,10 +111,10 @@ function DesktopAccountMenu({
           id='header-account-menu'
           role='menu'
           aria-labelledby='header-account-trigger'
-          className='absolute end-0 top-[calc(100%+6px)] z-[250] min-w-[220px] rounded-lg border border-line bg-card py-1 shadow-lg'
+          className='absolute inset-e-0 top-[calc(100%+6px)] z-250 min-w-[220px] rounded-lg border border-line bg-card py-1 shadow-lg'
         >
           <p
-            className='border-b border-line px-4 py-3 font-sans text-[13px] font-medium break-words text-ink'
+            className='border-b border-line px-4 py-3 font-sans text-[13px] font-medium wrap-break-word text-ink'
             role='presentation'
           >
             {display}
@@ -294,8 +294,14 @@ export function SiteHeader() {
               </Link>
             ) : null}
           </nav>
-          {/* Keep arbitrary widths (not w-44 / lg:w-*) so SSR and client emit identical class strings — avoids hydration mismatch in dev */}
-          <div className='flex w-[11rem] shrink-0 justify-end lg:w-[12.5rem]'>
+          {/* Full literal class strings (no cn merge) so SSR and client match byte-for-byte */}
+          <div
+            className={
+              session?.user
+                ? "flex w-auto shrink-0 justify-end"
+                : "flex w-44 shrink-0 justify-end lg:w-50"
+            }
+          >
             {status === "loading" ? (
               desktopAuthPlaceholder
             ) : session?.user ? (
@@ -415,7 +421,7 @@ export function SiteHeader() {
                 onClick={() => setMobileAccountOpen((o) => !o)}
               >
                 <SessionAvatar
-                  className='!size-9 text-[11px]'
+                  className='size-9! text-[11px]'
                   image={session.user.image}
                   name={session.user.name}
                   email={session.user.email}
@@ -435,7 +441,7 @@ export function SiteHeader() {
                   aria-labelledby='mobile-account-trigger'
                   className='border-t border-paper/10 px-1 pb-3'
                 >
-                  <p className='px-3 py-2 font-sans text-[13px] break-words text-paper/75'>
+                  <p className='px-3 py-2 font-sans text-[13px] wrap-break-word text-paper/75'>
                     {session.user.name?.trim() ||
                       session.user.email?.trim() ||
                       "Member"}

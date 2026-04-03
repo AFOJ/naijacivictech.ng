@@ -1,5 +1,6 @@
 "use client";
 
+import { AuthorAvatar } from "@/components/civic/AuthorAvatar";
 import { DirectoryBoardSkeleton } from "@/components/civic/CivicLoadingSkeletons";
 import { GitHubIcon } from "@/components/GitHubIcon";
 import {
@@ -11,7 +12,6 @@ import { useCivicVote } from "@/hooks/use-civic-vote";
 import {
   CATEGORIES,
   formatPostedAt,
-  initials,
   isListedOnDirectory,
   listingBadgeTw,
 } from "@/lib/civic-utils";
@@ -256,12 +256,11 @@ export function DirectoryBoard({ previewMaxCards }: DirectoryBoardProps = {}) {
               </div>
               <div className='mt-auto flex flex-wrap items-center justify-between gap-1.5 border-t border-line pt-2'>
                 <div className='flex items-center gap-1 text-[11px] text-muted'>
-                  <div
-                    className='flex size-[18px] shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-white'
-                    style={{ background: t.authorColor }}
-                  >
-                    {initials(t.authorName)}
-                  </div>
+                  <AuthorAvatar
+                    name={t.authorName}
+                    color={t.authorColor}
+                    image={t.authorImage}
+                  />
                   <span className='truncate max-w-[60px]'>{t.authorName}</span>
                 </div>
                 <div className='flex flex-wrap items-center gap-2'>
