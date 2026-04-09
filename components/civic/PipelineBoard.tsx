@@ -111,8 +111,7 @@ function PipelineCard({
             image={p.authorImage}
           />
           <span
-            className='min-w-0 truncate text-[10px] font-medium text-ink/80'
-            title={p.authorName}
+            className='min-w-0 wrap-break-word text-[10px] font-medium text-ink/80'
           >
             {p.authorName}
           </span>
